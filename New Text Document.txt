@@ -1,0 +1,54 @@
+import javafx.animation.AnimationTimer;
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.canvas.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
+import javafx.stage.Stage;
+import java.util.HashSet;
+
+public class GameMain extends Application {
+    private HashSet<KeyCode> keys = new HashSet<>();
+    private double playerX = 400, playerY = 300;
+    private final double speed = 4;
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+    public void start(Stage stage) {
+        Canvas canvas = new Canvas(800, 600);
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+
+        Scene scene = new Scene(new Pane(canvas));
+        scene.setOnKeyPressed(e -> keys.add(e.getCode()));
+        scene.setOnKeyReleased(e -> keys.remove(e.getCode()));
+
+        stage.setTitle("Top-Down Shooter");
+        stage.setScene(scene);
+        stage.show();
+
+        new AnimationTimer() {
+            public void handle(long now) {
+                update();
+                render(gc);
+            }
+        }.start();
+    }
+
+    private void update() {
+        if (keys.contains(KeyCode.W)) playerY -= speed;
+        if (keys.contains(KeyCode.S)) playerY += speed;
+        if (keys.contains(KeyCode.A)) playerX -= speed;
+        if (keys.contains(KeyCode.D)) playerX += speed;
+    }
+
+    private void render(GraphicsContext gc) {
+        gc.setFill(Color.BLACK);
+        gc.fillRect(0, 0, 800, 600);
+
+        gc.setFill(Color.LIME);
+        gc.fillOval(playerX, playerY, 40, 40);
+    }
+}

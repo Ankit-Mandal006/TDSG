@@ -1,0 +1,12 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Launch GameMain",
+      "request": "launch",
+      "mainClass": "GameMain",
+      "vmArgs": "--module-path \"C:/Users/Ankit Mandal/javafx-sdk-24.0.2/lib\" --add-modules javafx.controls,javafx.fxml"
+    }
+  ]
+}
