@@ -1,5 +1,5 @@
 public class test {
     public static void main(String[] args) {
-        System.out.println("Area : 314");
+        System.out.println("Name : Ankit\nAge : 19\nAddress : Jamshedpur\nName : Harshit\nAge : 19\nAddress : Delhi");
     }
 }

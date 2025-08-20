@@ -119,14 +119,22 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
             for (Enemy en : enemies) {
                 Rectangle enemyRect = new Rectangle((int) en.x, (int) en.y, en.width, en.height);
                 if (enemyRect.intersects(playerRect)) {
-                    gameOver = true;
+                    player.takeDamage(20); // lose 20 HP per hit (tweak as you like)
+
+                    // remove the enemy so it doesn’t keep draining health every frame
+                    enemies.remove(en);
                     break;
                 }
-                // only trigger game over when enemy fully passes bottom (safer)
                 if (en.y > HEIGHT) {
                     gameOver = true;
                     break;
                 }
+            }
+
+            // check if player health is 0
+            if (player.health <= 0) {
+                gameOver = true;
+                player.health = player.maxHealth;
             }
 
             if (gameOver) timer.stop();
@@ -187,6 +195,22 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.BOLD, 20));
         g.drawString("Score: " + score, 10, 20);
+        
+     // HUD
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 20));
+        g.drawString("Score: " + score, 10, 20);
+
+        // Health bar
+        int barWidth = 150, barHeight = 20;
+        int xPos = WIDTH - barWidth - 20, yPos = 20;
+        g.setColor(Color.GRAY);
+        g.fillRect(xPos, yPos, barWidth, barHeight);
+        g.setColor(Color.RED);
+        int healthWidth = (int)((player.health / (double)player.maxHealth) * barWidth);
+        g.fillRect(xPos, yPos, healthWidth, barHeight);
+        g.setColor(Color.WHITE);
+        g.drawRect(xPos, yPos, barWidth, barHeight);
 
         if (gameOver) {
             g.setColor(Color.RED);

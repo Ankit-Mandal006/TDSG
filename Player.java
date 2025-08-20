@@ -9,6 +9,9 @@ public class Player {
     double friction = 0.05;
     double angle;               // rotation toward mouse
     int width = 40, height = 40;
+    
+    int maxHealth = 100;
+    int health = 100;
 
     boolean up, down, left, right;
 
@@ -62,6 +65,24 @@ public class Player {
             g2.setColor(Color.CYAN);
             g2.fillRect(-width/2, -height/2, width, height);
         }
+        
+        /*
+     // Health bar at top-right
+        int barWidth = 150;
+        int barHeight = 20;
+        int xPos = GamePanel.WIDTH - barWidth - 20; // 20px margin
+        int yPos = 20;
+
+        g.setColor(Color.GRAY);
+        g.fillRect(xPos, yPos, barWidth, barHeight);
+
+        g.setColor(Color.RED);
+        int healthWidth = (int)((health / (double)maxHealth) * barWidth);
+        g.fillRect(xPos, yPos, healthWidth, barHeight);
+
+        g.setColor(Color.WHITE);
+        g.drawRect(xPos, yPos, barWidth, barHeight);*/
+
 
         g2.dispose();
     }
@@ -79,4 +100,15 @@ public class Player {
         if (e.getKeyCode() == KeyEvent.VK_A) left = false;
         if (e.getKeyCode() == KeyEvent.VK_D) right = false;
     }
+    
+    public void takeDamage(int dmg) {
+        health -= dmg;
+        if (health < 0) health = 0;
+    }
+
+    public void heal(int amount) {
+        health += amount;
+        if (health > maxHealth) health = maxHealth;
+    }
+
 }
