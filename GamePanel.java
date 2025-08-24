@@ -1,36 +1,39 @@
-import javax.swing.*;
 import java.awt.*;
-import java.awt.Rectangle;
 import java.awt.event.*;
 import java.util.ArrayList;
-import java.util.Iterator;
+import javax.swing.*;
 
 public class GamePanel extends JPanel implements ActionListener, KeyListener {
     private Timer timer;
     private Player player;
-    private ArrayList<Bullet> bullets = new ArrayList<>();
-    private ArrayList<Enemy> enemies = new ArrayList<>();
+    private ArrayList<Bullet> bullets;
+    private ArrayList<Enemy> enemies;
 
-    private int score = 0;
-    private boolean gameOver = false;
+    private int score;
+    private boolean gameOver;
 
     public static final int WIDTH = 800;
     public static final int HEIGHT = 600;
 
     private int mouseX, mouseY;
+    private GameMain mainFrame;
 
-    public GamePanel() {
+    // === Constructor ===
+    public GamePanel(GameMain mainFrame) {
+        this.mainFrame = mainFrame;
+
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(Color.BLACK);
         setFocusable(true);
         requestFocusInWindow();
 
         player = new Player(WIDTH / 2, HEIGHT / 2);
+        bullets = new ArrayList<>();
+        enemies = new ArrayList<>();
 
-        // Key listener (this)
         addKeyListener(this);
 
-        // Mouse move tracking
+        // Track mouse position for rotation
         addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
@@ -39,169 +42,154 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
             }
         });
 
-        // Mouse click to shoot
+        // Shoot bullets on mouse click
         addMouseListener(new MouseAdapter() {
             @Override
-            public void mousePressed(MouseEvent e) {
-                // offset from center toward front of ship
-                double bulletX = player.x + player.width / 2 + Math.cos(player.angle) * player.width / 2;
-                double bulletY = player.y + player.height / 2 + Math.sin(player.angle) * player.height / 2;
+public void mousePressed(MouseEvent e) {
+    double bulletX = player.x + player.width / 2 + Math.cos(player.angle) * player.width / 2;
+    double bulletY = player.y + player.height / 2 + Math.sin(player.angle) * player.height / 2;
 
-                double angle = Math.atan2(
-                    e.getY() - (player.y + player.height / 2.0),
-                    e.getX() - (player.x + player.width / 2.0)
-                );
+    double angle = Math.atan2(
+            e.getY() - (player.y + player.height / 2.0),
+            e.getX() - (player.x + player.width / 2.0)
+    );
 
-                bullets.add(new Bullet(bulletX - 2, bulletY - 2, angle)); // -3 centers bullet
-            }
+    Bullet newBullet = new Bullet(bulletX - 2, bulletY - 2, angle);
+    bullets.add(newBullet);
+
+    // ✅ Debug
+    System.out.println("Bullet fired at: (" + bulletX + "," + bulletY + ") angle=" + angle 
+                        + " | bullets=" + bullets.size());
+}
+
         });
-        timer = new Timer(16, this); // ~60fps
-        timer.start();
+
+        timer = new Timer(16, this); // ~60 FPS
     }
 
+    // === Start / Stop ===
     public void startGame() {
-        // reset state if needed
         bullets.clear();
         enemies.clear();
         score = 0;
         gameOver = false;
         player.x = WIDTH / 2.0;
         player.y = HEIGHT / 2.0;
+        player.health = player.maxHealth;
         timer.start();
     }
 
+    public void stopGame() {
+        if (timer != null && timer.isRunning()) {
+            timer.stop();
+        }
+    }
+
+    // === Game Loop ===
     @Override
     public void actionPerformed(ActionEvent e) {
         if (!gameOver) {
-            // update player (rotation uses current mouse pos)
+            // Update player
             player.update(mouseX, mouseY);
 
-            // update bullets (safe removal using index loop)
+            // Update bullets
             for (int i = bullets.size() - 1; i >= 0; i--) {
                 Bullet b = bullets.get(i);
                 b.update();
                 if (b.isOffScreen(WIDTH, HEIGHT)) bullets.remove(i);
             }
 
-            // spawn enemies randomly from any edge (low chance each frame)
+            // Random enemy spawn
             if (Math.random() < 0.02) {
                 spawnEnemyAtEdge();
             }
 
-            // update enemies and make them chase player
+            // Update enemies
             for (Enemy en : enemies) {
                 en.chase(player.x + player.width / 2.0, player.y + player.height / 2.0);
             }
 
-            // bullet-enemy collisions (safe removal with iterators)
+            // Bullet-Enemy collision
             for (int i = enemies.size() - 1; i >= 0; i--) {
                 Enemy en = enemies.get(i);
                 Rectangle enemyRect = new Rectangle((int) en.x, (int) en.y, en.width, en.height);
 
-                boolean destroyed = false;
                 for (int j = bullets.size() - 1; j >= 0; j--) {
                     Bullet b = bullets.get(j);
                     Rectangle bulletRect = new Rectangle((int) b.x, (int) b.y, b.size, b.size);
                     if (enemyRect.intersects(bulletRect)) {
-                        // remove both
                         enemies.remove(i);
                         bullets.remove(j);
                         score += 10;
-                        destroyed = true;
                         break;
                     }
                 }
-                if (destroyed) continue;
             }
 
-            // player-enemy collision & enemy reaches bottom -> game over
+            // Player-Enemy collision
             Rectangle playerRect = new Rectangle((int) player.x, (int) player.y, player.width, player.height);
-            for (Enemy en : enemies) {
+            for (int i = enemies.size() - 1; i >= 0; i--) {
+                Enemy en = enemies.get(i);
                 Rectangle enemyRect = new Rectangle((int) en.x, (int) en.y, en.width, en.height);
-                if (enemyRect.intersects(playerRect)) {
-                    player.takeDamage(20); // lose 20 HP per hit (tweak as you like)
 
-                    // remove the enemy so it doesn’t keep draining health every frame
-                    enemies.remove(en);
-                    break;
-                }
-                if (en.y > HEIGHT) {
-                    gameOver = true;
-                    break;
+                if (enemyRect.intersects(playerRect)) {
+                    player.takeDamage(20);
+                    enemies.remove(i);
                 }
             }
 
-            // check if player health is 0
+            // Game Over check
             if (player.health <= 0) {
                 gameOver = true;
-                player.health = player.maxHealth;
+                timer.stop();
             }
-
-            if (gameOver) timer.stop();
         }
-
         repaint();
     }
 
+    // === Enemy Spawning ===
     private void spawnEnemyAtEdge() {
-        // choose random edge: 0=top,1=right,2=bottom,3=left
-        int edge = (int) (Math.random() * 4);
+        int edge = (int)(Math.random() * 4);
         int ex = 0, ey = 0;
+    
         switch (edge) {
-            case 0: // top
-                ex = (int) (Math.random() * (WIDTH - 40));
-                ey = -40;
-                break;
-            case 1: // right
-                ex = WIDTH;
-                ey = (int) (Math.random() * (HEIGHT - 40));
-                break;
-            case 2: // bottom
-                ex = (int) (Math.random() * (WIDTH - 40));
-                ey = HEIGHT;
-                break;
-            case 3: // left
-                ex = -40;
-                ey = (int) (Math.random() * (HEIGHT - 40));
-                break;
+            case 0: ex = (int)(Math.random() * (WIDTH - 40)); ey = 0; break;        // top
+            case 1: ex = WIDTH - 40; ey = (int)(Math.random() * (HEIGHT - 40)); break; // right
+            case 2: ex = (int)(Math.random() * (WIDTH - 40)); ey = HEIGHT - 40; break; // bottom
+            case 3: ex = 0; ey = (int)(Math.random() * (HEIGHT - 40)); break;        // left
         }
         enemies.add(new Enemy(ex, ey));
     }
+    
 
+    // === Rendering ===
     @Override
     public void paintComponent(Graphics g) {
-    	super.paintComponent(g);
+        super.paintComponent(g);
 
-        // Draw background
+        // Background
         if (SpriteManager.bgSprite != null) {
-            g.drawImage(SpriteManager.bgSprite, 0, 0, GamePanel.WIDTH, GamePanel.HEIGHT, null);
+            g.drawImage(SpriteManager.bgSprite, 0, 0, WIDTH, HEIGHT, null);
         } else {
             g.setColor(Color.BLACK);
-            g.fillRect(0, 0, GamePanel.WIDTH, GamePanel.HEIGHT);
+            g.fillRect(0, 0, WIDTH, HEIGHT);
         }
 
-        // draw player
+        // Player
         player.draw(g);
 
-        // draw bullets
+        // Bullets
         for (Bullet b : bullets) b.draw(g);
 
-        // draw enemies
-        for (Enemy en : enemies) {
-            en.draw(g, player); // pass player so they rotate toward player
-        }
+        // Enemies
+        for (Enemy en : enemies) en.draw(g, player);
 
-        // HUD
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.BOLD, 20));
-        g.drawString("Score: " + score, 10, 20);
-        
-     // HUD
+        // Score
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.BOLD, 20));
         g.drawString("Score: " + score, 10, 20);
 
-        // Health bar
+        // Health Bar
         int barWidth = 150, barHeight = 20;
         int xPos = WIDTH - barWidth - 20, yPos = 20;
         g.setColor(Color.GRAY);
@@ -212,6 +200,7 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         g.setColor(Color.WHITE);
         g.drawRect(xPos, yPos, barWidth, barHeight);
 
+        // Game Over Text
         if (gameOver) {
             g.setColor(Color.RED);
             g.setFont(new Font("Arial", Font.BOLD, 50));
@@ -221,11 +210,10 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         }
     }
 
-    // key listener methods (movement + restart)
+    // === Input ===
     @Override
     public void keyPressed(KeyEvent e) {
         player.keyPressed(e);
-        // restart on Enter
         if (gameOver && e.getKeyCode() == KeyEvent.VK_ENTER) startGame();
     }
 
@@ -236,4 +224,9 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 
     @Override
     public void keyTyped(KeyEvent e) {}
+
+    @Override
+    public boolean isFocusable() {
+        return true;
+    }
 }

@@ -3,11 +3,11 @@ import java.awt.event.KeyEvent;
 
 public class Player {
     double x, y;
-    double vx = 0, vy = 0;      // velocity
-    double speed = 0.5;         // acceleration per tick
-    double maxSpeed = 6;
-    double friction = 0.05;
-    double angle;               // rotation toward mouse
+    double vx = 0, vy = 0;        // velocity
+    double accel = 0.3;           // acceleration per tick
+    double maxSpeed = 6;          // max velocity
+    double friction = 0.05;       // natural slowdown
+    double angle;                 // rotation toward mouse
     int width = 40, height = 40;
     
     int maxHealth = 100;
@@ -21,21 +21,21 @@ public class Player {
     }
 
     public void update(int mouseX, int mouseY) {
-        // Rotation toward mouse (only for shooting)
+        // Rotation toward mouse
         angle = Math.atan2(mouseY - (y + height / 2), mouseX - (x + width / 2));
 
-        // Movement independent of rotation
-        if (up) vy -= speed;
-        if (down) vy += speed;
-        if (left) vx -= speed;
-        if (right) vx += speed;
+        // Apply acceleration
+        if (up) vy -= accel;
+        if (down) vy += accel;
+        if (left) vx -= accel;
+        if (right) vx += accel;
 
-        // Apply friction
-        vx *= (1 - friction);
-        vy *= (1 - friction);
+        // Apply friction (only if no input in that direction)
+        if (!up && !down) vy *= (1 - friction);
+        if (!left && !right) vx *= (1 - friction);
 
         // Limit speed
-        double velocity = Math.sqrt(vx*vx + vy*vy);
+        double velocity = Math.sqrt(vx * vx + vy * vy);
         if (velocity > maxSpeed) {
             vx = (vx / velocity) * maxSpeed;
             vy = (vy / velocity) * maxSpeed;
@@ -46,18 +46,16 @@ public class Player {
         y += vy;
 
         // Keep player inside screen
-        if (x < 0) x = 0;
-        if (x + width > GamePanel.WIDTH) x = GamePanel.WIDTH - width;
-        if (y < 0) y = 0;
-        if (y + height > GamePanel.HEIGHT) y = GamePanel.HEIGHT - height;
+        if (x < 0) { x = 0; vx = 0; }
+        if (x + width > GamePanel.WIDTH) { x = GamePanel.WIDTH - width; vx = 0; }
+        if (y < 0) { y = 0; vy = 0; }
+        if (y + height > GamePanel.HEIGHT) { y = GamePanel.HEIGHT - height; vy = 0; }
     }
 
     public void draw(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
-
-        // translate to center
         g2.translate(x + width/2, y + height/2);
-        g2.rotate(angle );
+        g2.rotate(angle);
 
         if (SpriteManager.playerSprite != null) {
             g2.drawImage(SpriteManager.playerSprite, -width/2, -height/2, width, height, null);
@@ -65,29 +63,12 @@ public class Player {
             g2.setColor(Color.CYAN);
             g2.fillRect(-width/2, -height/2, width, height);
         }
-        
-        /*
-     // Health bar at top-right
-        int barWidth = 150;
-        int barHeight = 20;
-        int xPos = GamePanel.WIDTH - barWidth - 20; // 20px margin
-        int yPos = 20;
-
-        g.setColor(Color.GRAY);
-        g.fillRect(xPos, yPos, barWidth, barHeight);
-
-        g.setColor(Color.RED);
-        int healthWidth = (int)((health / (double)maxHealth) * barWidth);
-        g.fillRect(xPos, yPos, healthWidth, barHeight);
-
-        g.setColor(Color.WHITE);
-        g.drawRect(xPos, yPos, barWidth, barHeight);*/
-
 
         g2.dispose();
     }
 
     public void keyPressed(KeyEvent e) {
+        System.out.println("Key pressed: " + e.getKeyCode());
         if (e.getKeyCode() == KeyEvent.VK_W) up = true;
         if (e.getKeyCode() == KeyEvent.VK_S) down = true;
         if (e.getKeyCode() == KeyEvent.VK_A) left = true;
@@ -110,5 +91,4 @@ public class Player {
         health += amount;
         if (health > maxHealth) health = maxHealth;
     }
-
 }
