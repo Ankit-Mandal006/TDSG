@@ -18,6 +18,7 @@ public class SpriteManager {
         	enemySprite  = ImageIO.read(new File("./enemy.png"));
         	bulletSprite = ImageIO.read(new File("./bullet.png"));
         	bgSprite     = ImageIO.read(new File("./bg.png"));
+            
 
         } catch (IOException e) {
             e.printStackTrace();
