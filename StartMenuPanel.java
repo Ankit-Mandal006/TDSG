@@ -25,7 +25,7 @@ class StartMenuPanel extends JPanel {
 
     private void loadBackgroundImage() {
         try {
-            backgroundImage = ImageIO.read(new File("assets/menu_background.png"));
+            backgroundImage = ImageIO.read(new File("assets/bg.png"));
         } catch (IOException e) {
             System.err.println("Could not load 'menu_background.png'.");
             backgroundImage = null;
