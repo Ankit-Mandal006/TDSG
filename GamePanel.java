@@ -4,6 +4,12 @@ import java.util.ArrayList;
 import javax.swing.*;
 
 public class GamePanel extends JPanel implements ActionListener, KeyListener {
+
+    // === From GameMain ===
+    private final GameMain mainFrame;
+    private final String username;
+    private final DatabaseManager db;
+
     private Timer timer;
     private Player player;
     private ArrayList<Bullet> bullets;
@@ -11,16 +17,18 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 
     private int score;
     private boolean gameOver;
+    private boolean savedStatsOnGameOver = false; // avoid double DB writes
 
     public static final int WIDTH = 800;
     public static final int HEIGHT = 600;
 
     private int mouseX, mouseY;
-    private GameMain mainFrame;
 
-    // === Constructor ===
-    public GamePanel(GameMain mainFrame) {
+    // === Constructor exactly matching GameMain call ===
+    public GamePanel(GameMain mainFrame, String username, DatabaseManager db) {
         this.mainFrame = mainFrame;
+        this.username = username;
+        this.db = db;
 
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(Color.BLACK);
@@ -35,8 +43,7 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 
         // Track mouse position for rotation
         addMouseMotionListener(new MouseMotionAdapter() {
-            @Override
-            public void mouseMoved(MouseEvent e) {
+            @Override public void mouseMoved(MouseEvent e) {
                 mouseX = e.getX();
                 mouseY = e.getY();
             }
@@ -44,24 +51,17 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 
         // Shoot bullets on mouse click
         addMouseListener(new MouseAdapter() {
-            @Override
-public void mousePressed(MouseEvent e) {
-    double bulletX = player.x + player.width / 2 + Math.cos(player.angle) * player.width / 2;
-    double bulletY = player.y + player.height / 2 + Math.sin(player.angle) * player.height / 2;
+            @Override public void mousePressed(MouseEvent e) {
+                double bulletX = player.x + player.width / 2 + Math.cos(player.angle) * player.width / 2;
+                double bulletY = player.y + player.height / 2 + Math.sin(player.angle) * player.height / 2;
 
-    double angle = Math.atan2(
-            e.getY() - (player.y + player.height / 2.0),
-            e.getX() - (player.x + player.width / 2.0)
-    );
+                double angle = Math.atan2(
+                        e.getY() - (player.y + player.height / 2.0),
+                        e.getX() - (player.x + player.width / 2.0)
+                );
 
-    Bullet newBullet = new Bullet(bulletX - 2, bulletY - 2, angle);
-    bullets.add(newBullet);
-
-    // ✅ Debug
-    System.out.println("Bullet fired at: (" + bulletX + "," + bulletY + ") angle=" + angle 
-                        + " | bullets=" + bullets.size());
-}
-
+                bullets.add(new Bullet(bulletX - 2, bulletY - 2, angle));
+            }
         });
 
         timer = new Timer(16, this); // ~60 FPS
@@ -73,6 +73,7 @@ public void mousePressed(MouseEvent e) {
         enemies.clear();
         score = 0;
         gameOver = false;
+        savedStatsOnGameOver = false;
         player.x = WIDTH / 2.0;
         player.y = HEIGHT / 2.0;
         player.health = player.maxHealth;
@@ -141,9 +142,15 @@ public void mousePressed(MouseEvent e) {
             // Game Over check
             if (player.health <= 0) {
                 gameOver = true;
+            }
+
+            if (gameOver && !savedStatsOnGameOver) {
+                savedStatsOnGameOver = true;
+                handleGameOverAndSave();
                 timer.stop();
             }
         }
+
         repaint();
     }
 
@@ -151,16 +158,31 @@ public void mousePressed(MouseEvent e) {
     private void spawnEnemyAtEdge() {
         int edge = (int)(Math.random() * 4);
         int ex = 0, ey = 0;
-    
+
         switch (edge) {
-            case 0: ex = (int)(Math.random() * (WIDTH - 40)); ey = 0; break;        // top
-            case 1: ex = WIDTH - 40; ey = (int)(Math.random() * (HEIGHT - 40)); break; // right
-            case 2: ex = (int)(Math.random() * (WIDTH - 40)); ey = HEIGHT - 40; break; // bottom
-            case 3: ex = 0; ey = (int)(Math.random() * (HEIGHT - 40)); break;        // left
+            case 0: ex = (int)(Math.random() * (WIDTH - 40)); ey = -40; break;          // top (spawn just above)
+            case 1: ex = WIDTH;                       ey = (int)(Math.random() * (HEIGHT - 40)); break; // right (off-screen)
+            case 2: ex = (int)(Math.random() * (WIDTH - 40)); ey = HEIGHT; break;        // bottom
+            case 3: ex = -40;                         ey = (int)(Math.random() * (HEIGHT - 40)); break; // left
         }
         enemies.add(new Enemy(ex, ey));
     }
-    
+
+    // === Persist stats to DB at game over ===
+    private void handleGameOverAndSave() {
+        // Update highscore using MAX(highscore, ?) in DatabaseManager
+        db.updateHighscore(username, score);
+
+        // Reward some coins based on score (tweak formula if you like)
+        int coinsEarned = score / 10;
+        if (coinsEarned > 0) {
+            db.updateCurrency(username, coinsEarned);
+        }
+        // (Optional) You can read back current totals if you want to display them.
+        // int best = db.getHighscore(username);
+        // int wallet = db.getCurrency(username);
+        // System.out.println("Saved! Highscore=" + best + ", Currency=" + wallet);
+    }
 
     // === Rendering ===
     @Override
@@ -187,9 +209,10 @@ public void mousePressed(MouseEvent e) {
         // Score
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.BOLD, 20));
-        g.drawString("Score: " + score, 10, 20);
+        g.drawString("Player: " + username, 10, 20);
+        g.drawString("Score: " + score, 10, 45);
 
-        // Health Bar
+        // Health Bar (top-right)
         int barWidth = 150, barHeight = 20;
         int xPos = WIDTH - barWidth - 20, yPos = 20;
         g.setColor(Color.GRAY);
@@ -214,19 +237,17 @@ public void mousePressed(MouseEvent e) {
     @Override
     public void keyPressed(KeyEvent e) {
         player.keyPressed(e);
-        if (gameOver && e.getKeyCode() == KeyEvent.VK_ENTER) startGame();
+        if (gameOver && e.getKeyCode() == KeyEvent.VK_ENTER) {
+            startGame(); // resets health & score and restarts
+        }
     }
 
     @Override
-    public void keyReleased(KeyEvent e) {
-        player.keyReleased(e);
-    }
+    public void keyReleased(KeyEvent e) { player.keyReleased(e); }
 
     @Override
     public void keyTyped(KeyEvent e) {}
 
     @Override
-    public boolean isFocusable() {
-        return true;
-    }
+    public boolean isFocusable() { return true; }
 }

@@ -1,5 +1,4 @@
 import java.awt.*;
-import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -14,6 +13,8 @@ class StartMenuPanel extends JPanel {
     private double titleScale = 1.0;
     private double scaleDirection = 0.005;
     private int backgroundYOffset = 0;
+
+    private JButton loginButton; // ✅ Now a JButton
 
     public StartMenuPanel(GameMain mainFrame) {
         this.gameMain = mainFrame;
@@ -38,10 +39,37 @@ class StartMenuPanel extends JPanel {
         menuItemsPanel.setOpaque(false);
         menuItemsPanel.setLayout(new BoxLayout(menuItemsPanel, BoxLayout.Y_AXIS));
 
-        menuItemsPanel.add(createMenuItem("New Game", () -> gameMain.showGamePanel()));
-        menuItemsPanel.add(Box.createRigidArea(new Dimension(0, 15)));
-        menuItemsPanel.add(Box.createRigidArea(new Dimension(0, 15)));
-        menuItemsPanel.add(createMenuItem("Quit", this::showExitConfirmation));
+        // === LOGIN / LOGOUT BUTTON ===
+        loginButton = new JButton();
+        updateLoginButton(); // set initial state (Login or Logout)
+        loginButton.setFont(new Font("Impact", Font.PLAIN, 28));
+        loginButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        loginButton.addActionListener(e -> handleLoginLogout());
+        menuItemsPanel.add(loginButton);
+
+        menuItemsPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+
+        // === NEW GAME ===
+        JButton newGameBtn = new JButton("New Game");
+        newGameBtn.setFont(new Font("Impact", Font.PLAIN, 28));
+        newGameBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        newGameBtn.addActionListener(e -> {
+            if (gameMain.getUsername() != null && !gameMain.getUsername().isEmpty()) {
+                gameMain.showGamePanel();
+            } else {
+                JOptionPane.showMessageDialog(this, "Please login first!");
+            }
+        });
+        menuItemsPanel.add(newGameBtn);
+
+        menuItemsPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+
+        // === QUIT ===
+        JButton quitBtn = new JButton("Quit");
+        quitBtn.setFont(new Font("Impact", Font.PLAIN, 28));
+        quitBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        quitBtn.addActionListener(e -> showExitConfirmation());
+        menuItemsPanel.add(quitBtn);
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.CENTER;
@@ -49,40 +77,31 @@ class StartMenuPanel extends JPanel {
         add(menuItemsPanel, gbc);
     }
 
-    private JLabel createMenuItem(String text, Runnable action) {
-        Font defaultFont = new Font("Impact", Font.PLAIN, 40);
-        JLabel label = new JLabel(text);
-        label.setFont(defaultFont);
-        label.setForeground(new Color(170, 210, 255));
-        label.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        label.addMouseListener(new MouseAdapter() {
-            Font hoverFont = new Font("Impact", Font.BOLD, 42);
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                label.setForeground(Color.WHITE);
-                label.setFont(hoverFont);
+    private void handleLoginLogout() {
+        if (gameMain.getUsername() == null || gameMain.getUsername().isEmpty()) {
+            // Open login window
+            new LoginWindow();
+            SwingUtilities.getWindowAncestor(this).dispose(); // close GameMain
+        } else {
+            // Logout
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Logout from " + gameMain.getUsername() + "?",
+                    "Confirm Logout",
+                    JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                // reset user session
+                gameMain.dispose();
+                SwingUtilities.invokeLater(LoginWindow::new);
             }
+        }
+    }
 
-            @Override
-            public void mouseExited(MouseEvent e) {
-                label.setForeground(new Color(170, 210, 255));
-                label.setFont(defaultFont);
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) {
-                label.setFont(new Font("Impact", Font.PLAIN, 38));
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                label.setFont(hoverFont);
-                if (action != null) action.run();
-            }
-        });
-        return label;
+    private void updateLoginButton() {
+        if (gameMain.getUsername() != null && !gameMain.getUsername().isEmpty()) {
+            loginButton.setText("Logout (" + gameMain.getUsername() + ")");
+        } else {
+            loginButton.setText("Login");
+        }
     }
 
     private void startAnimation() {
@@ -124,7 +143,7 @@ class StartMenuPanel extends JPanel {
 
         String title = "Space Survivor";
         Font baseFont = new Font("Impact", Font.BOLD, 90);
-        Font scaledFont = baseFont.deriveFont((float) (baseFont.getSize() * titleScale));
+        Font scaledFont = baseFont.deriveFont((float) (baseFont.getSize() * (float)titleScale));
         g2d.setFont(scaledFont);
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
