@@ -8,7 +8,7 @@ public class GameMain extends JFrame {
     private DatabaseManager db;
 
     public GameMain(String username, DatabaseManager db) {
-        super("Space Survivor - Player: " + username);
+        super("Trigger Tracker - Player: " + username);
         this.username = username;
         this.db = db;
 

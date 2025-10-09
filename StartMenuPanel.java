@@ -55,7 +55,8 @@ class StartMenuPanel extends JPanel {
         newGameBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         newGameBtn.addActionListener(e -> {
             if (gameMain.getUsername() != null && !gameMain.getUsername().isEmpty()) {
-                gameMain.showGamePanel();
+                gameMain.showGamePanel();              // ✅ Start game
+                new LeaderboardWindow();               // ✅ Open leaderboard beside game
             } else {
                 JOptionPane.showMessageDialog(this, "Please login first!");
             }
@@ -141,7 +142,7 @@ class StartMenuPanel extends JPanel {
             g2d.fillRect(0, 0, getWidth(), getHeight());
         }
 
-        String title = "Space Survivor";
+        String title = "Trigger Tracker";
         Font baseFont = new Font("Impact", Font.BOLD, 90);
         Font scaledFont = baseFont.deriveFont((float) (baseFont.getSize() * (float)titleScale));
         g2d.setFont(scaledFont);
