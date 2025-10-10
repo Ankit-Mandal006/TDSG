@@ -10,6 +10,8 @@ public class SpriteManager {
     public static BufferedImage bulletSprite;
     public static BufferedImage bgSprite;
     public static BufferedImage blastSprite;
+    public static BufferedImage bossSprite;
+    public static BufferedImage orbSprite;
 
     // Call once at game start
     public static void loadSprites() {
@@ -28,9 +30,15 @@ public class SpriteManager {
             
             blastSprite = ImageIO.read(SpriteManager.class.getResource("/assets/blast.png"));
             System.out.println("✅ Explosion sprite loaded");
+            
+            bossSprite = ImageIO.read(SpriteManager.class.getResource("/assets/Boss1.png"));
+            orbSprite = ImageIO.read(SpriteManager.class.getResource("/assets/orb.png"));
 
         } catch (IOException e) {
             System.out.println("⚠ Error reading image file");
+            
+            bossSprite = null;
+            orbSprite = null;
             e.printStackTrace();
         } catch (NullPointerException npe) {
             System.out.println("❌ Could not find one or more sprite files in /assets/ folder");
