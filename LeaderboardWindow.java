@@ -6,6 +6,8 @@ import java.sql.*;
 public class LeaderboardWindow extends JFrame {
     private JTable table;
     private DefaultTableModel model;
+    private Timer autoRefreshTimer;
+
 
     public LeaderboardWindow() {
         setTitle("🏆 Leaderboard");
@@ -23,7 +25,20 @@ public class LeaderboardWindow extends JFrame {
 
         loadData();
         setVisible(true);
+        // Refresh every 5 seconds (5000 ms)
+        autoRefreshTimer = new Timer(16, e -> loadData()); // 16 ms ≈ 60 FPS
+        autoRefreshTimer.start();
+        
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosed(java.awt.event.WindowEvent e) {
+                if (autoRefreshTimer != null) autoRefreshTimer.stop();
+            }
+        });
+
+
     }
+    
 
     private void loadData() {
         model.setRowCount(0);

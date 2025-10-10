@@ -9,6 +9,7 @@ public class SpriteManager {
     public static BufferedImage enemySprite;
     public static BufferedImage bulletSprite;
     public static BufferedImage bgSprite;
+    public static BufferedImage blastSprite;
 
     // Call once at game start
     public static void loadSprites() {
@@ -24,6 +25,9 @@ public class SpriteManager {
 
             bgSprite = ImageIO.read(SpriteManager.class.getResource("/assets/bg.png"));
             System.out.println("✅ Background sprite loaded");
+            
+            blastSprite = ImageIO.read(SpriteManager.class.getResource("/assets/blast.png"));
+            System.out.println("✅ Explosion sprite loaded");
 
         } catch (IOException e) {
             System.out.println("⚠ Error reading image file");

@@ -21,6 +21,9 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 
     public static final int WIDTH = 800;
     public static final int HEIGHT = 600;
+    
+    private ArrayList<Explosion> explosions = new ArrayList<>();
+    private int screenshakeFrames = 0;
 
     private int mouseX, mouseY;
 
@@ -119,11 +122,15 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
                     Bullet b = bullets.get(j);
                     Rectangle bulletRect = new Rectangle((int) b.x, (int) b.y, b.size, b.size);
                     if (enemyRect.intersects(bulletRect)) {
+                        // Spawn explosion at center of enemy
+                        explosions.add(new Explosion(en.x + en.width / 2.0, en.y + en.height / 2.0));
+                        screenshakeFrames = 12; // shake for some frames
                         enemies.remove(i);
                         bullets.remove(j);
                         score += 10;
                         break;
                     }
+
                 }
             }
 
@@ -135,10 +142,25 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 
                 if (enemyRect.intersects(playerRect)) {
                     player.takeDamage(20);
+                    // Spawn explosion at center of enemy
+                    explosions.add(new Explosion(en.x + en.width / 2.0, en.y + en.height / 2.0));
+                    screenshakeFrames = 12; // shake for some frames
                     enemies.remove(i);
                 }
+
+            }
+            
+            // Update explosions
+            for (int i = explosions.size() - 1; i >= 0; i--) {
+                explosions.get(i).age++;
+                if (!explosions.get(i).isAlive())
+                    explosions.remove(i);
             }
 
+            // Update screenshake
+            if (screenshakeFrames > 0) screenshakeFrames--;
+
+            
             // Game Over check
             if (player.health <= 0) {
                 gameOver = true;
@@ -170,23 +192,33 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
 
     // === Persist stats to DB at game over ===
     private void handleGameOverAndSave() {
-        // Update highscore using MAX(highscore, ?) in DatabaseManager
-        db.updateHighscore(username, score);
+        if (db != null && username != null && !username.equalsIgnoreCase("Guest")) {
+            db.updateHighscore(username, score);
 
-        // Reward some coins based on score (tweak formula if you like)
-        int coinsEarned = score / 10;
-        if (coinsEarned > 0) {
-            db.updateCurrency(username, coinsEarned);
+            int coinsEarned = score / 10;
+            if (coinsEarned > 0) {
+                db.updateCurrency(username, coinsEarned);
+            }
         }
-        // (Optional) You can read back current totals if you want to display them.
-        // int best = db.getHighscore(username);
-        // int wallet = db.getCurrency(username);
-        // System.out.println("Saved! Highscore=" + best + ", Currency=" + wallet);
+        // Optionally, you can display a message or skip DB logic for guests
     }
+
 
     // === Rendering ===
     @Override
     public void paintComponent(Graphics g) {
+    	// Screen shake
+    	int shakeX = 0, shakeY = 0;
+    	if (screenshakeFrames > 0) {
+    	    shakeX = (int)(Math.random() * 8 - 4);
+    	    shakeY = (int)(Math.random() * 8 - 4);
+    	}
+    	Graphics2D g2 = (Graphics2D) g.create();
+    	g2.translate(shakeX, shakeY);
+
+    	// Draw the background, player, bullets, enemies, etc. (replace all 'g' with 'g2')
+
+    	
         super.paintComponent(g);
 
         // Background
@@ -222,6 +254,24 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         g.fillRect(xPos, yPos, healthWidth, barHeight);
         g.setColor(Color.WHITE);
         g.drawRect(xPos, yPos, barWidth, barHeight);
+        
+        // Draw explosions
+        for (Explosion ex : explosions) {
+            float alpha = 1.0f - (ex.age / (float)ex.duration);
+            if (SpriteManager.blastSprite != null) {
+                // Draw blast png/gif with transparency
+                g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+                int size = 60;
+                g2.drawImage(SpriteManager.blastSprite, (int)ex.x - size/2, (int)ex.y - size/2, size, size, null);
+                g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f)); // reset
+            } else {
+                // Fallback: red circle fading out
+                g2.setColor(new Color(255, 100, 0, (int)(180 * alpha)));
+                g2.fillOval((int)ex.x - 32, (int)ex.y - 32, 64, 64);
+            }
+        }
+        g2.dispose();
+
 
         // Game Over Text
         if (gameOver) {

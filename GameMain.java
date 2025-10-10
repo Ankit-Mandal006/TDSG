@@ -72,14 +72,18 @@ public class GameMain extends JFrame {
     public DatabaseManager getDatabaseManager() {
         return db;
     }
-
+    
     public static void main(String[] args) {
+        SwingUtilities.invokeLater(LoginWindow::new); // Show the login window first
+    }
+
+    /*public static void main(String[] args) {
         // Example: Hardcoded until login system starts it
-        String username = "Player1"; 
+        String username = "Guest"; 
         DatabaseManager db = new DatabaseManager();
 
         SwingUtilities.invokeLater(() -> {
             new GameMain(username, db); // ✅ only ONE JFrame
         });
-    }
+    }*/
 }

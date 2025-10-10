@@ -9,29 +9,78 @@ public class LoginWindow extends JFrame {
     public LoginWindow() {
         db = new DatabaseManager();
 
-        setTitle("Game Login");
-        setSize(350, 200);
+        setTitle("Trigger Tracker - Login");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setSize(370, 265);
+        setResizable(false);
         setLocationRelativeTo(null);
-        setLayout(new GridLayout(3, 2, 5, 5));
 
-        usernameField = new JTextField();
-        passwordField = new JPasswordField();
+        // ---- Main Layout Panel ----
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 32, 20, 32));
 
+        // ---- Title ----
+        JLabel titleLabel = new JLabel("Trigger Tracker Login");
+        titleLabel.setFont(new Font("Verdana", Font.BOLD, 20));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        mainPanel.add(titleLabel);
+        mainPanel.add(Box.createRigidArea(new Dimension(0,18)));
+
+        // ---- Username Row ----
+        JPanel userRow = new JPanel(new BorderLayout());
+        userRow.setOpaque(false);
+        userRow.add(new JLabel("Username:"), BorderLayout.WEST);
+        usernameField = new JTextField(15);
+        userRow.add(usernameField, BorderLayout.CENTER);
+        mainPanel.add(userRow);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        // ---- Password Row ----
+        JPanel passRow = new JPanel(new BorderLayout());
+        passRow.setOpaque(false);
+        passRow.add(new JLabel("Password:"), BorderLayout.WEST);
+        passwordField = new JPasswordField(15);
+        passRow.add(passwordField, BorderLayout.CENTER);
+        mainPanel.add(passRow);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 18)));
+
+        // ---- Buttons Row ----
+        JPanel buttonRow = new JPanel(new GridLayout(1, 2, 10, 0));
         JButton loginBtn = new JButton("Login");
         JButton registerBtn = new JButton("Register");
+        buttonRow.add(loginBtn);
+        buttonRow.add(registerBtn);
+        mainPanel.add(buttonRow);
 
-        add(new JLabel("Username:"));
-        add(usernameField);
-        add(new JLabel("Password:"));
-        add(passwordField);
-        add(loginBtn);
-        add(registerBtn);
+        // ---- Separator ----
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 11)));
+        JSeparator sep = new JSeparator();
+        sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 5));
+        mainPanel.add(sep);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
+        // ---- Guest Button ----
+        JButton guestBtn = new JButton("Play as Guest");
+        guestBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        guestBtn.setForeground(new Color(30,80,160));
+        guestBtn.setFont(new Font("Verdana", Font.ITALIC, 14));
+        guestBtn.setBackground(new Color(227,237,255));
+        guestBtn.setFocusPainted(false);
+        mainPanel.add(guestBtn);
+
+        // ---- Button Logic ----
         loginBtn.addActionListener(e -> login());
         registerBtn.addActionListener(e -> register());
+        guestBtn.addActionListener(e -> playAsGuest());
 
+        setContentPane(mainPanel);
         setVisible(true);
+    }
+
+    private void playAsGuest() {
+        dispose();
+        new GameMain("Guest", null);
     }
 
     private void login() {
@@ -56,7 +105,6 @@ public class LoginWindow extends JFrame {
 
         boolean ok = db.registerUser(username, password);
         if (ok) {
-            // auto-login after registration
             JOptionPane.showMessageDialog(this, "Registered! Logging in...");
             dispose();
             new GameMain(username, db);

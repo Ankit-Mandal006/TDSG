@@ -1,118 +1,233 @@
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
 class StartMenuPanel extends JPanel {
-    private GameMain gameMain;
+    private final GameMain gameMain;
     private BufferedImage backgroundImage;
     private Timer animationTimer;
+    private JButton loginButton, userButton;
 
     private double titleScale = 1.0;
-    private double scaleDirection = 0.005;
+    private double scaleDirection = 0.003;
     private int backgroundYOffset = 0;
-
-    private JButton loginButton; // ✅ Now a JButton
 
     public StartMenuPanel(GameMain mainFrame) {
         this.gameMain = mainFrame;
         setPreferredSize(new Dimension(1024, 576));
+        setLayout(new BorderLayout());
+        setBackground(Color.decode("#181a20"));
         loadBackgroundImage();
-        initComponents();
         startAnimation();
-    }
 
-    private void loadBackgroundImage() {
-        try {
-            backgroundImage = ImageIO.read(new File("assets/bg.png"));
-        } catch (IOException e) {
-            System.err.println("Could not load 'menu_background.png'.");
-            backgroundImage = null;
-        }
-    }
+        // Main menu panel
+        JPanel menuPanel = new JPanel();
+        menuPanel.setOpaque(false);
+        menuPanel.setLayout(new BoxLayout(menuPanel, BoxLayout.Y_AXIS));
+        menuPanel.setBorder(BorderFactory.createEmptyBorder(120, 0, 0, 0));
 
-    private void initComponents() {
-        setLayout(new GridBagLayout());
-        JPanel menuItemsPanel = new JPanel();
-        menuItemsPanel.setOpaque(false);
-        menuItemsPanel.setLayout(new BoxLayout(menuItemsPanel, BoxLayout.Y_AXIS));
+        // Title
+        JLabel titleLabel = new JLabel("");
+        titleLabel.setFont(new Font("Segoe UI Black", Font.BOLD, 75));
+        titleLabel.setForeground(new Color(230, 235, 255));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        menuPanel.add(titleLabel);
+        menuPanel.add(Box.createRigidArea(new Dimension(0, 100)));
 
-        // === LOGIN / LOGOUT BUTTON ===
-        loginButton = new JButton();
-        updateLoginButton(); // set initial state (Login or Logout)
-        loginButton.setFont(new Font("Impact", Font.PLAIN, 28));
-        loginButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        loginButton.addActionListener(e -> handleLoginLogout());
-        menuItemsPanel.add(loginButton);
+        // Fonts and border
+        Font menuFont = new Font("Segoe UI Semibold", Font.PLAIN, 28);
+        int borderRadius = 20;
+        int borderThickness = 4;
 
-        menuItemsPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        
 
-        // === NEW GAME ===
-        JButton newGameBtn = new JButton("New Game");
-        newGameBtn.setFont(new Font("Impact", Font.PLAIN, 28));
-        newGameBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        newGameBtn.addActionListener(e -> {
+        // NEW GAME BUTTON
+        JButton startBtn = minimalistMenuButton("NEW GAME", menuFont, borderRadius, borderThickness);
+        startBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        startBtn.addActionListener(e -> {
             if (gameMain.getUsername() != null && !gameMain.getUsername().isEmpty()) {
-                gameMain.showGamePanel();              // ✅ Start game
-                new LeaderboardWindow();               // ✅ Open leaderboard beside game
+                gameMain.showGamePanel();
+                new LeaderboardWindow();
             } else {
                 JOptionPane.showMessageDialog(this, "Please login first!");
             }
         });
-        menuItemsPanel.add(newGameBtn);
+        menuPanel.add(startBtn);
+        menuPanel.add(Box.createRigidArea(new Dimension(0, 12)));
 
-        menuItemsPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        // LEADERBOARD BUTTON
+        JButton leaderboardBtn = minimalistMenuButton("LEADERBOARD", menuFont, borderRadius, borderThickness);
+        leaderboardBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        leaderboardBtn.addActionListener(e -> new LeaderboardWindow());
+        menuPanel.add(leaderboardBtn);
+        menuPanel.add(Box.createRigidArea(new Dimension(0, 18)));
 
-        // === QUIT ===
-        JButton quitBtn = new JButton("Quit");
-        quitBtn.setFont(new Font("Impact", Font.PLAIN, 28));
+        // QUIT BUTTON
+        JButton quitBtn = minimalistMenuButton("QUIT GAME", menuFont, borderRadius, borderThickness);
         quitBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         quitBtn.addActionListener(e -> showExitConfirmation());
-        menuItemsPanel.add(quitBtn);
+        menuPanel.add(quitBtn);
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.anchor = GridBagConstraints.CENTER;
-        gbc.insets = new Insets(0, 300, 0, 0);
-        add(menuItemsPanel, gbc);
+        add(menuPanel, BorderLayout.CENTER);
+
+     // --- User/account (logout) button at bottom left, with icon + name ---
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        bottomPanel.setOpaque(false);
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(0, 18, 15, 0));
+
+        // Use a font that supports the icon
+        userButton = new JButton();
+        userButton.setFocusPainted(false);
+        userButton.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 20));
+        userButton.setBackground(new Color(34, 36, 44, 160));
+        userButton.setForeground(new Color(225, 230, 240));
+        userButton.setPreferredSize(new Dimension(220, 38));
+        userButton.setMaximumSize(new Dimension(260, 40));
+        userButton.setOpaque(true);
+        userButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        userButton.setBorder(new RoundedBorder(20, new Color(94, 104, 120), 4));
+        userButton.setToolTipText("Account");
+        userButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                userButton.setBackground(new Color(54, 47, 76, 200));
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                userButton.setBackground(new Color(34, 36, 44, 160));
+            }
+        });
+        userButton.addActionListener(e -> handleLoginLogout());
+        bottomPanel.add(userButton);
+        add(bottomPanel, BorderLayout.SOUTH);
+        updateUserButton();
+
+    }
+
+    private void loadBackgroundImage() {
+        try {
+            backgroundImage = ImageIO.read(getClass().getResource("/assets/bg.png"));
+        } catch (Exception e) {
+            backgroundImage = null;
+        }
+    }
+
+    private JButton minimalistMenuButton(String text, Font font, int radius, int thickness) {
+        JButton btn = new JButton(text);
+        btn.setFocusPainted(false);
+        btn.setFont(font);
+        btn.setBackground(new Color(34, 36, 44));
+        btn.setForeground(new Color(220, 225, 239));
+        btn.setPreferredSize(new Dimension(320, 60));
+        btn.setMaximumSize(new Dimension(340, 64));
+        btn.setMinimumSize(new Dimension(160, 44));
+        btn.setOpaque(true);
+        btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btn.setBorder(new RoundedBorder(radius, new Color(64, 64, 90), thickness));
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btn.setBackground(new Color(56, 59, 76));
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btn.setBackground(new Color(34, 36, 44));
+            }
+        });
+        return btn;
+    }
+
+    private JButton minimalistUserButton(Font font, int radius, int thickness) {
+        JButton btn = new JButton();
+        btn.setFocusPainted(false);
+        btn.setFont(font);
+        btn.setBackground(new Color(34, 36, 44, 160));
+        btn.setForeground(new Color(225, 230, 240));
+        btn.setPreferredSize(new Dimension(180, 38));
+        btn.setMaximumSize(new Dimension(200, 40));
+        btn.setOpaque(true);
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btn.setBorder(new RoundedBorder(radius, new Color(94, 104, 120), thickness));
+        btn.setToolTipText("Account");
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btn.setBackground(new Color(54, 47, 76, 200));
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btn.setBackground(new Color(34, 36, 44, 160));
+            }
+        });
+        btn.addActionListener(e -> handleLoginLogout());
+        return btn;
+    }
+
+    // Thicker, rounded border class
+    static class RoundedBorder implements javax.swing.border.Border {
+        private final int radius;
+        private final Color color;
+        private final int thickness;
+
+        RoundedBorder(int radius, Color color, int thickness) {
+            this.radius = radius;
+            this.color = color;
+            this.thickness = thickness;
+        }
+        public Insets getBorderInsets(Component c) {
+            return new Insets(thickness, thickness, thickness, thickness);
+        }
+        public boolean isBorderOpaque() { return false; }
+        public void paintBorder(Component c, Graphics g, int x, int y, int w, int h) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setStroke(new BasicStroke(thickness));
+            g2.setColor(color);
+            g2.drawRoundRect(x + thickness/2, y + thickness/2, w-thickness, h-thickness, radius, radius);
+            g2.dispose();
+        }
     }
 
     private void handleLoginLogout() {
         if (gameMain.getUsername() == null || gameMain.getUsername().isEmpty()) {
-            // Open login window
             new LoginWindow();
-            SwingUtilities.getWindowAncestor(this).dispose(); // close GameMain
+            SwingUtilities.getWindowAncestor(this).dispose();
         } else {
-            // Logout
-            int confirm = JOptionPane.showConfirmDialog(this,
-                    "Logout from " + gameMain.getUsername() + "?",
-                    "Confirm Logout",
-                    JOptionPane.YES_NO_OPTION);
+            int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Logout from " + gameMain.getUsername() + "?",
+                "Confirm Logout",
+                JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
-                // reset user session
                 gameMain.dispose();
                 SwingUtilities.invokeLater(LoginWindow::new);
             }
         }
+        updateLoginButton();
+        updateUserButton();
     }
 
     private void updateLoginButton() {
         if (gameMain.getUsername() != null && !gameMain.getUsername().isEmpty()) {
-            loginButton.setText("Logout (" + gameMain.getUsername() + ")");
+            loginButton.setText("ACCOUNT: " + gameMain.getUsername().toUpperCase());
         } else {
-            loginButton.setText("Login");
+            loginButton.setText("LOGIN");
         }
     }
+
+    private void updateUserButton() {
+        if (gameMain.getUsername() != null && !gameMain.getUsername().isEmpty()) {
+            userButton.setText("👤 " + gameMain.getUsername());
+            userButton.setVisible(true);
+        } else {
+            userButton.setText("");
+            userButton.setVisible(false);
+        }
+    }
+
 
     private void startAnimation() {
         animationTimer = new Timer(30, e -> {
             titleScale += scaleDirection;
-            if (titleScale > 1.05 || titleScale < 0.95) scaleDirection *= -1;
-
-            backgroundYOffset++;
+            if (titleScale > 1.04 || titleScale < 0.97) scaleDirection *= -1;
+            backgroundYOffset += 1;
             if (backgroundYOffset >= getHeight()) backgroundYOffset = 0;
-
             repaint();
         });
         animationTimer.start();
@@ -132,30 +247,30 @@ class StartMenuPanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        Graphics2D g2d = (Graphics2D) g;
+        Graphics2D g2d = (Graphics2D) g.create();
 
         if (backgroundImage != null) {
             g2d.drawImage(backgroundImage, 0, backgroundYOffset, getWidth(), getHeight(), this);
             g2d.drawImage(backgroundImage, 0, backgroundYOffset - getHeight(), getWidth(), getHeight(), this);
         } else {
-            g2d.setColor(Color.BLACK);
+            g2d.setColor(getBackground());
             g2d.fillRect(0, 0, getWidth(), getHeight());
         }
 
-        String title = "Trigger Tracker";
-        Font baseFont = new Font("Impact", Font.BOLD, 90);
+        // Animated title shadow (centered, visually balanced)
+        String title = "TRIGGER TRACKER";
+        Font baseFont = new Font("Segoe UI Black", Font.BOLD, 85);
         Font scaledFont = baseFont.deriveFont((float) (baseFont.getSize() * (float)titleScale));
-        g2d.setFont(scaledFont);
-        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-
-        FontMetrics fm = g2d.getFontMetrics();
+        FontMetrics fm = g2d.getFontMetrics(scaledFont);
         int titleWidth = fm.stringWidth(title);
         int x = (getWidth() - titleWidth) / 2;
-        int y = getHeight() / 2 - 120;
+        int y = getHeight() / 2 - 110;
 
-        g2d.setColor(new Color(0, 0, 0, 150));
-        g2d.drawString(title, x + 5, y + 5);
-        g2d.setColor(new Color(170, 210, 255));
+        g2d.setFont(scaledFont);
+        g2d.setColor(new Color(0,0,0, 88));
+        g2d.drawString(title, x + 4, y + 8);
+        g2d.setColor(new Color(210, 225, 247));
         g2d.drawString(title, x, y);
+        g2d.dispose();
     }
 }
