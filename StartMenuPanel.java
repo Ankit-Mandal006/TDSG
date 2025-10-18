@@ -62,6 +62,25 @@ class StartMenuPanel extends JPanel {
         leaderboardBtn.addActionListener(e -> new LeaderboardWindow());
         menuPanel.add(leaderboardBtn);
         menuPanel.add(Box.createRigidArea(new Dimension(0, 18)));
+        
+        // SHOP BUTTON
+        JButton shopBtn = minimalistMenuButton("SHOP", menuFont, borderRadius, borderThickness);
+        shopBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        shopBtn.addActionListener(e -> {
+            String username = gameMain.getUsername();
+            DatabaseManager db = gameMain.getDatabaseManager();
+
+
+            if (username != null && !username.isEmpty() && db != null) {
+                new ShopWindow(username, db);
+            } else {
+                JOptionPane.showMessageDialog(this, "Please log in to access the shop.");
+            }
+        });
+        menuPanel.add(shopBtn);
+        menuPanel.add(Box.createRigidArea(new Dimension(0, 12)));
+
+
 
         // QUIT BUTTON
         JButton quitBtn = minimalistMenuButton("QUIT GAME", menuFont, borderRadius, borderThickness);

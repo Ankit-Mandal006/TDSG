@@ -10,7 +10,7 @@ public class Player {
     double angle;                   // rotation toward mouse
     final int width = 40, height = 40;
 
-    final int maxHealth = 100;
+    final int maxHealth = 500;
     int health = maxHealth;
 
     boolean up, down, left, right;
@@ -58,12 +58,13 @@ public class Player {
         g2.translate(x + width / 2.0, y + height / 2.0);
         g2.rotate(angle);
 
-        if (SpriteManager.playerSprite != null) {
-            g2.drawImage(SpriteManager.playerSprite, -width / 2, -height / 2, width, height, null);
+        if (SpriteManager.selectedPlayerSprite != null) {
+            g2.drawImage(SpriteManager.selectedPlayerSprite, -width / 2, -height / 2, width, height, null);
         } else {
             g2.setColor(Color.CYAN);
             g2.fillRect(-width / 2, -height / 2, width, height);
         }
+
 
         g2.dispose();
     }
@@ -87,7 +88,7 @@ public class Player {
     }
 
     public void takeDamage(int dmg) {
-        health = Math.max(0, health - dmg);
+        health = Math.max(0, health -dmg);
     }
 
     public void heal(int amount) {

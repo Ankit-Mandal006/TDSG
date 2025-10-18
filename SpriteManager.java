@@ -5,7 +5,11 @@ import javax.imageio.ImageIO;
 
 public class SpriteManager {
     // existing sprites
-    public static BufferedImage playerSprite;
+	public static BufferedImage playerDefaultSprite;
+    public static BufferedImage playerSkin1;
+    public static BufferedImage playerSkin2;
+    public static BufferedImage playerSkin3;
+    public static BufferedImage selectedPlayerSprite;
     public static BufferedImage enemySprite;
     public static BufferedImage bulletSprite;
     public static BufferedImage enemybulletSprite;
@@ -13,6 +17,8 @@ public class SpriteManager {
     public static BufferedImage blastSprite;
     public static BufferedImage bossSprite;
     public static BufferedImage orbSprite;
+    
+    
 
     // new sprites for additional enemy types
     public static BufferedImage chargerEnemySprite;
@@ -22,7 +28,11 @@ public class SpriteManager {
     public static void loadSprites() {
         try {
             // existing sprite loads
-            playerSprite = ImageIO.read(SpriteManager.class.getResource("/assets/Player1.png"));
+        	playerDefaultSprite = ImageIO.read(SpriteManager.class.getResource("/assets/Player1.png"));
+            playerSkin1 = ImageIO.read(SpriteManager.class.getResource("/assets/Player2.png"));
+            playerSkin2 = ImageIO.read(SpriteManager.class.getResource("/assets/Player3.png"));
+            playerSkin3 = ImageIO.read(SpriteManager.class.getResource("/assets/Player4.png"));
+            selectedPlayerSprite = playerDefaultSprite;
             enemySprite = ImageIO.read(SpriteManager.class.getResource("/assets/Enemy1.png"));
             bulletSprite = ImageIO.read(SpriteManager.class.getResource("/assets/bullet.png"));
             enemybulletSprite = ImageIO.read(SpriteManager.class.getResource("/assets/Enemy bullet.png"));
