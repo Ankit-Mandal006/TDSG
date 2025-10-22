@@ -77,13 +77,4 @@ public class GameMain extends JFrame {
         SwingUtilities.invokeLater(LoginWindow::new); // Show the login window first
     }
 
-    /*public static void main(String[] args) {
-        // Example: Hardcoded until login system starts it
-        String username = "Guest"; 
-        DatabaseManager db = new DatabaseManager();
-
-        SwingUtilities.invokeLater(() -> {
-            new GameMain(username, db); // ✅ only ONE JFrame
-        });
-    }*/
 }

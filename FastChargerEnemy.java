@@ -3,7 +3,7 @@ import java.awt.*;
 public class FastChargerEnemy extends Enemy {
     public FastChargerEnemy(int startX, int startY) {
         super(startX, startY);
-        this.speed = 3.2;        // Much faster than normal
+        this.speed = 4;        // Much faster than normal
         this.width = 32;
         this.height = 32;
     }

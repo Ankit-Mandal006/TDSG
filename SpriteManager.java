@@ -28,22 +28,24 @@ public class SpriteManager {
     public static void loadSprites() {
         try {
             // existing sprite loads
-        	playerDefaultSprite = ImageIO.read(SpriteManager.class.getResource("/assets/Player1.png"));
-            playerSkin1 = ImageIO.read(SpriteManager.class.getResource("/assets/Player2.png"));
-            playerSkin2 = ImageIO.read(SpriteManager.class.getResource("/assets/Player3.png"));
-            playerSkin3 = ImageIO.read(SpriteManager.class.getResource("/assets/Player4.png"));
+        	
+
+        	playerDefaultSprite = ImageIO.read(SpriteManager.class.getResourceAsStream("/assets/Player1.png"));
+            playerSkin1 = ImageIO.read(SpriteManager.class.getResourceAsStream("/assets/Player2.png"));
+            playerSkin2 = ImageIO.read(SpriteManager.class.getResourceAsStream("/assets/Player3.png"));
+            playerSkin3 = ImageIO.read(SpriteManager.class.getResourceAsStream("/assets/Player4.png"));
             selectedPlayerSprite = playerDefaultSprite;
-            enemySprite = ImageIO.read(SpriteManager.class.getResource("/assets/Enemy1.png"));
-            bulletSprite = ImageIO.read(SpriteManager.class.getResource("/assets/bullet.png"));
-            enemybulletSprite = ImageIO.read(SpriteManager.class.getResource("/assets/Enemy bullet.png"));
-            bgSprite = ImageIO.read(SpriteManager.class.getResource("/assets/bg.png"));
-            blastSprite = ImageIO.read(SpriteManager.class.getResource("/assets/blast.png"));
-            bossSprite = ImageIO.read(SpriteManager.class.getResource("/assets/Boss1.png"));
-            orbSprite = ImageIO.read(SpriteManager.class.getResource("/assets/orb.png"));
+            enemySprite = ImageIO.read(SpriteManager.class.getResourceAsStream("/assets/Enemy1.png"));
+            bulletSprite = ImageIO.read(SpriteManager.class.getResourceAsStream("/assets/bullet.png"));
+            enemybulletSprite = ImageIO.read(SpriteManager.class.getResourceAsStream("/assets/Enemy bullet.png"));
+            bgSprite = ImageIO.read(SpriteManager.class.getResourceAsStream("/assets/bg.png"));
+            blastSprite = ImageIO.read(SpriteManager.class.getResourceAsStream("/assets/blast.png"));
+            bossSprite = ImageIO.read(SpriteManager.class.getResourceAsStream("/assets/Boss1.png"));
+            orbSprite = ImageIO.read(SpriteManager.class.getResourceAsStream("/assets/orb.png"));
 
             // load new enemy sprites
-            chargerEnemySprite = ImageIO.read(SpriteManager.class.getResource("/assets/ChargerEnemy.png"));
-            rangedEnemySprite = ImageIO.read(SpriteManager.class.getResource("/assets/RangedEnemy.png"));
+            chargerEnemySprite = ImageIO.read(SpriteManager.class.getResourceAsStream("/assets/ChargerEnemy.png"));
+            rangedEnemySprite = ImageIO.read(SpriteManager.class.getResourceAsStream("/assets/RangedEnemy.png"));
 
             System.out.println("✅ Enemy sprites loaded");
 
